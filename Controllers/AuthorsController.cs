@@ -1,61 +1,78 @@
-﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MyApi.Data;
+using MyApi.Models;
 
-namespace testapi.Controllers
+namespace MyApi.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class AuthorsController : ControllerBase
     {
-        private readonly AppDbContext _db;
-        public AuthorsController(AppDbContext db) { _db = db; }
+        private readonly AppDbContext _context;
 
+        public AuthorsController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _db.Authors.Include(a => a.Books).ToListAsync());
+        public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
+        {
+            return await _context.Authors
+                                 .Include(a => a.Books)
+                                 .ToListAsync();
+        }
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public async Task<ActionResult<Author>> GetAuthor(int id)
         {
-            var author = await _db.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.AuthorId == id);
-            if (author == null) return NotFound();
-            return Ok(author);
+            var author = await _context.Authors
+                                       .Include(a => a.Books)
+                                       .FirstOrDefaultAsync(a => a.AuthorId == id);
+
+            if (author == null)
+                return NotFound();
+
+            return author;
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Author author)
+        public async Task<ActionResult<Author>> CreateAuthor(Author author)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            _db.Authors.Add(author);
-            await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = author.AuthorId }, author);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            _context.Authors.Add(author);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetAuthor), new { id = author.AuthorId }, author);
         }
 
-
+   
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Author author)
+        public async Task<IActionResult> UpdateAuthor(int id, Author author)
         {
-            if (id != author.AuthorId) return BadRequest("Id mismatch");
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            _db.Entry(author).State = EntityState.Modified;
-            try { await _db.SaveChangesAsync(); }
-            catch (DbUpdateConcurrencyException) when (!await _db.Authors.AnyAsync(a => a.AuthorId == id))
-            {
-                return NotFound();
-            }
+            if (id != author.AuthorId)
+                return BadRequest();
+
+            _context.Entry(author).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
-
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteAuthor(int id)
         {
-            var author = await _db.Authors.FindAsync(id);
-            if (author == null) return NotFound();
-            _db.Authors.Remove(author);
-            await _db.SaveChangesAsync();
+            var author = await _context.Authors.FindAsync(id);
+            if (author == null)
+                return NotFound();
+
+            _context.Authors.Remove(author);
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
     }
