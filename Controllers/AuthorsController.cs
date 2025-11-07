@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MyApi.Data;
-using MyApi.Models;
+using testapi.Data;
+using testapi.Models;
 
-namespace MyApi.Controllers
+namespace testapi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -20,13 +20,12 @@ namespace MyApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
         {
-     
             return await _context.Authors
                                  .Include(a => a.Books)
                                  .ToListAsync();
         }
 
-  
+   
         [HttpGet("{id}")]
         public async Task<ActionResult<Author>> GetAuthor(int id)
         {
@@ -40,18 +39,16 @@ namespace MyApi.Controllers
             return author;
         }
 
+   
         [HttpPost]
         public async Task<ActionResult<Author>> CreateAuthor(Author author)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             _context.Authors.Add(author);
             await _context.SaveChangesAsync();
 
-
             return CreatedAtAction(nameof(GetAuthor), new { id = author.AuthorId }, author);
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuthor(int id, Author author)
@@ -60,11 +57,21 @@ namespace MyApi.Controllers
                 return BadRequest();
 
             _context.Entry(author).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AuthorExists(id))
+                    return NotFound();
+                else
+                    throw;
+            }
 
             return NoContent();
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
@@ -77,6 +84,11 @@ namespace MyApi.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private bool AuthorExists(int id)
+        {
+            return _context.Authors.Any(e => e.AuthorId == id);
         }
     }
 }
