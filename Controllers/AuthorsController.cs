@@ -5,7 +5,7 @@ namespace testapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class AuthorsController : ControllerBase
     {
         private readonly AppDbContext _db;
         public AuthorsController(AppDbContext db) { _db = db; }
