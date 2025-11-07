@@ -1,77 +1,33 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MyApi.Data;
-using MyApi.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MyApi.Controllers
+
+namespace MyApi.Models
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class BooksController : ControllerBase
-    {
-        private readonly AppDbContext _context;
+public class Book
+{
+public int BookId { get; set; }
 
-        public BooksController(AppDbContext context)
-        {
-            _context = context;
-        }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
-        {
-            return await _context.Books.Include(b => b.Author).ToListAsync();
-        }
+[Required]
+[StringLength(200)]
+public string Title { get; set; }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Book>> GetBook(int id)
-        {
-            var book = await _context.Books
-                .Include(b => b.Author)
-                .FirstOrDefaultAsync(b => b.BookId == id);
 
-            if (book == null)
-            {
-                return NotFound();
-            }
+[StringLength(100)]
+public string Genre { get; set; }
 
-            return book;
-        }
 
-        [HttpPost]
-        public async Task<ActionResult<Book>> CreateBook(Book book)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+[Range(1000, 2100)]
+public int PublicationYear { get; set; }
 
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetBook), new { id = book.BookId }, book);
-        }
-        
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBook(int id, Book book)
-        {
-            if (id != book.BookId)
-                return BadRequest();
+// foreign key
+[Required]
+public int AuthorId { get; set; }
 
-            _context.Entry(book).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBook(int id)
-        {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
-                return NotFound();
-
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-    }
+// navigation
+public Author Author { get; set; }
+}
 }
