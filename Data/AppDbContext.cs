@@ -11,7 +11,6 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure 1-many relationship: Author -> Books
             modelBuilder.Entity<Author>()
             .HasMany(a => a.Books)
             .WithOne(b => b.Author)
