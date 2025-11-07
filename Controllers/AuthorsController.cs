@@ -16,15 +16,17 @@ namespace MyApi.Controllers
             _context = context;
         }
 
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
         {
+     
             return await _context.Authors
                                  .Include(a => a.Books)
                                  .ToListAsync();
         }
 
-
+  
         [HttpGet("{id}")]
         public async Task<ActionResult<Author>> GetAuthor(int id)
         {
@@ -38,7 +40,6 @@ namespace MyApi.Controllers
             return author;
         }
 
-
         [HttpPost]
         public async Task<ActionResult<Author>> CreateAuthor(Author author)
         {
@@ -47,10 +48,11 @@ namespace MyApi.Controllers
 
             _context.Authors.Add(author);
             await _context.SaveChangesAsync();
+
+
             return CreatedAtAction(nameof(GetAuthor), new { id = author.AuthorId }, author);
         }
 
-   
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuthor(int id, Author author)
         {
@@ -62,6 +64,7 @@ namespace MyApi.Controllers
 
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
